@@ -6,7 +6,7 @@
 ![](https://github.com/IBCHgenomic/eVaiutilities/blob/main/logo.png)
 
 ```
-human genomics utilities.
+length grep for expresion matrix.
        ************************************************
       Gaurav Sablok, IBCH, PAN, Poznan, Poland,
       https://portal.ichb.pl/laboratory-of-genomics/.
@@ -25,7 +25,6 @@ Commands:
 Options:
   -h, --help     Print help
   -V, --version  Print version
-
 ```
 ```
 /target/debug/geneLengthuman threaded-length-human yes
