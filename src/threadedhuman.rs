@@ -1,6 +1,8 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
+use std::path::Path;
 use std::process::Command;
 
 /*
@@ -13,19 +15,19 @@ use std::process::Command;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 struct GeneLength {
-    annotype: String,
-    idvec: String,
     startvec: usize,
     endvec: usize,
+    length: usize,
 }
 
 pub async fn threadedlengthhuman(generate: &str) -> Result<String, Box<dyn Error>> {
-    if generate == "yes" {
+    let pathadd = Path::new("gencode.v48.primary_assembly.annotation.gtf.gz");
+    if generate == "yes" && !pathadd.exists() {
         let _ = Command::new("wget").
-         arg("https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_48/gencode.v48.chr_patch_hapl_scaff.annotation.gtf.gz")
+         arg("https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_48/gencode.v48.primary_assembly.annotation.gtf.gz")
          .output()
             .expect("command failed");
-        let _ = Command::new("wget")
+        let _ = Command::new("gunzip")
             .arg("gencode.v48.primary_assembly.annotation.gtf.gz")
             .output()
             .expect("Command failed");
@@ -37,7 +39,6 @@ pub async fn threadedlengthhuman(generate: &str) -> Result<String, Box<dyn Error
         let fileall =
             File::open("gencode.v48.primary_assembly.annotation.gtf").expect("file not present");
         let filecontent = BufReader::new(fileall);
-        let mut genevec: Vec<String> = Vec::new();
         let mut id: Vec<String> = Vec::new();
         let mut start: Vec<usize> = Vec::new();
         let mut end: Vec<usize> = Vec::new();
@@ -50,7 +51,6 @@ pub async fn threadedlengthhuman(generate: &str) -> Result<String, Box<dyn Error
                     .collect::<Vec<String>>();
                 for _i in 0..linevec.len() {
                     if linevec[2].clone().to_string() == "gene" {
-                        genevec.push(linevec[2].clone());
                         start.push(linevec[3].parse::<usize>().unwrap());
                         end.push(linevec[4].parse::<usize>().unwrap());
                         id.push(
@@ -65,29 +65,31 @@ pub async fn threadedlengthhuman(generate: &str) -> Result<String, Box<dyn Error
                 }
             }
         }
-        let mut genevecrwrite: Vec<GeneLength> = Vec::new();
-        for i in 0..genevec.len() {
-            genevecrwrite.push(GeneLength {
-                annotype: genevec[i].clone(),
-                idvec: id[i].clone(),
-                startvec: start[i],
-                endvec: end[i],
-            })
+        let mut genevecrwrite: HashMap<String, GeneLength> = HashMap::new();
+        for i in 0..id.len() {
+            genevecrwrite.insert(
+                id[i].to_string(),
+                GeneLength {
+                    startvec: start[i],
+                    endvec: end[i],
+                    length: end[i] - start[i],
+                },
+            );
         }
 
         let mut filewrite = File::create("genelength.txt").expect("File not present");
-        for i in genevecrwrite.iter() {
+        for (i, j) in genevecrwrite.iter() {
             writeln!(
                 filewrite,
                 "{}\t{}\t{}\t{}",
-                i.annotype, i.idvec, i.startvec, i.endvec
+                i, j.startvec, j.endvec, j.length
             )
             .expect("no file present");
         }
 
         let _ = Command::new("rm")
             .arg("-rf")
-            .arg("gencode.vM37.primary_assembly.annotation.gtf.gz")
+            .arg("gencode.v48.primary_assembly.annotation.gtf")
             .output()
             .expect("file not found");
 

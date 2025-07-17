@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 #[command(
     name = "lengthgrep",
     version = "1.0",
-    about = "human genomics utilities.
+    about = "length grep for expresion matrix.
        ************************************************
       Gaurav Sablok, IBCH, PAN, Poznan, Poland,
       https://portal.ichb.pl/laboratory-of-genomics/.

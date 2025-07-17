@@ -21,11 +21,11 @@ fn main() {
     match &argparse.command {
         Commands::ThreadedLengthHuman { generate } => {
             let command = task::block_on(threadedlengthhuman(generate)).unwrap();
-            println!("The command has finished:{}", command);
+            println!("The command has finished:{:?}", command);
         }
         Commands::ThreadedLengthMouse { generate } => {
             let command = task::block_on(threadedlengthmouse(generate)).unwrap();
-            println!("The command has finished:{}", command);
+            println!("The command has finished:{:?}", command);
         }
     }
 }
